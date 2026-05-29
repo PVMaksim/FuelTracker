@@ -1,0 +1,115 @@
+site_name: FuelTracker Docs
+site_description: Документация PWA-приложения для трекинга расходов на топливо
+site_author: PVMaksim
+site_url: https://pvmaksim.github.io/fuel-tracker/
+repo_url: https://github.com/PVMaksim/fuel-tracker
+repo_name: PVMaksim/fuel-tracker
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: ru
+  palette:
+    - scheme: slate
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Светлая тема
+    - scheme: default
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Тёмная тема
+  features:
+    - navigation.tabs           # Вкладки верхнего уровня
+    - navigation.sections       # Раскрытые секции в сайдбаре
+    - navigation.expand         # Авторазворот активной секции
+    - navigation.top            # Кнопка "наверх"
+    - search.highlight          # Подсветка найденного
+    - search.suggest            # Подсказки поиска
+    - content.code.copy         # Кнопка копирования в блоках кода
+    - content.code.annotate     # Аннотации в коде
+    - toc.follow                # Активный пункт в оглавлении
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      lang: ru
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [backend]       # Корень для импортов Python
+          options:
+            show_root_heading: true
+            show_source: true
+            show_signature_annotations: true
+            docstring_style: google
+            merge_init_into_class: true
+            show_submodules: false
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Главная: index.md
+  - Архитектура:
+    - Обзор: architecture/overview.md
+    - Офлайн и синхронизация: architecture/offline-sync.md
+    - ADR — Принятые решения: architecture/adr.md
+  - API:
+    - Обзор эндпоинтов: api/overview.md
+    - Заправки: api/refuels.md
+    - Статистика: api/stats.md
+    - Экспорт: api/export.md
+    - OCR: api/ocr.md
+  - Backend (Python):
+    - Конфигурация: backend/config.md
+    - Модели БД: backend/models.md
+    - Расчёты: backend/calculations.md
+    - Уведомления: backend/notifications.md
+  - Frontend (TypeScript):
+    - Обзор: frontend/overview.md
+    - Офлайн БД (Dexie): frontend/db.md
+    - API клиент: frontend/api-client.md
+    - Синхронизация: frontend/sync.md
+    - Расчёты: frontend/calculations.md
+  - Деплой:
+    - Быстрый старт: deployment/quickstart.md
+    - VPS и SSL: deployment/vps-ssl.md
+    - GitHub Actions CI/CD: deployment/ci-cd.md
+    - Бэкапы: deployment/backups.md
+  - Разработка:
+    - Локальный запуск: development/local-setup.md
+    - Импорт данных из Numbers: development/import-numbers.md
+    - Переменные окружения: development/env-vars.md
+
+  - Тестирование:
+    - Обзор: testing/overview.md
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/PVMaksim

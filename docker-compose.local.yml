@@ -1,0 +1,11 @@
+services:
+  nginx:
+    volumes:
+      - ./docker/nginx.local.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "9090:80"
+  frontend:
+    build:
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:9090/api/v1
+        - NEXT_PUBLIC_API_KEY=8pL8N7lSQ3rntm1Zk8PfJ1jbMxaZdBG4xhoG_kkisZY

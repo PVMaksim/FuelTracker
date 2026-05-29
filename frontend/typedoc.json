@@ -1,0 +1,23 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "lib/db.ts",
+    "lib/api.ts",
+    "lib/sync.ts",
+    "lib/calculations.ts"
+  ],
+  "out": "../docs/frontend/typedoc",
+  "name": "FuelTracker Frontend",
+  "readme": "none",
+  "plugin": ["typedoc-plugin-markdown"],
+  "outputFileStrategy": "members",
+  "flattenOutputFiles": true,
+  "hideGenerator": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "includeVersion": false,
+  "categorizeByGroup": true,
+  "navigationLinks": {
+    "GitHub": "https://github.com/PVMaksim/fuel-tracker"
+  }
+}
