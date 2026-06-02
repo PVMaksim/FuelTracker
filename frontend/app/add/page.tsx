@@ -166,7 +166,7 @@ export default function AddRefuelPage() {
     if (!file) return;
     setOcrOdoLoading(true);
     try {
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090/api/v1"}/ocr/odometer`, {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8090/api/v1"}/ocr/odometer`, {
         method: "POST",
         headers: { "X-API-Key": process.env.NEXT_PUBLIC_API_KEY || "" },
         body: (() => { const f = new FormData(); f.append("file", file); return f; })(),

@@ -1,15 +1,15 @@
 /**
  * API client for FuelTracker backend.
  */
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:9090/api/v1";
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? "";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8090/api/v1";
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "8pL8";
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      "X-API-Key": API_KEY,
+      "x-api-key": API_KEY,
       ...options.headers,
     },
   });
@@ -104,7 +104,7 @@ export const api = {
     const form = new FormData();
     form.append("file", file);
     const response = await fetch(`${API_URL}/ocr/receipt`, {
-      method: "POST", headers: { "X-API-Key": API_KEY }, body: form,
+      method: "POST", headers: { "x-api-key": API_KEY }, body: form,
     });
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: "OCR ошибка" }));
@@ -128,10 +128,10 @@ export const api = {
   analyzeRepairReceipt: async (file: File) => {
     const form = new FormData();
     form.append("file", file);
-    const API_URL2 = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090/api/v1";
+    const API_URL2 = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8090/api/v1";
     const API_KEY2 = process.env.NEXT_PUBLIC_API_KEY || "";
     const response = await fetch(`${API_URL2}/ocr/repair`, {
-      method: "POST", headers: { "X-API-Key": API_KEY2 }, body: form,
+      method: "POST", headers: { "x-api-key": API_KEY2 }, body: form,
     });
     if (!response.ok) throw new Error("Ошибка OCR");
     return response.json();
