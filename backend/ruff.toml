@@ -1,8 +1,7 @@
-[ruff]
 target-version = "py312"
 line-length = 100
 
-[ruff.lint]
+[lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -16,5 +15,5 @@ ignore = [
     "E501",  # line too long — handled by formatter
 ]
 
-[ruff.lint.isort]
+[lint.isort]
 known-first-party = ["src"]
