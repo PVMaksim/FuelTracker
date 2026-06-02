@@ -1,13 +1,14 @@
 """Expenses CRUD — Ремонт и Прочее расходы по машине."""
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
-from sqlalchemy import select, desc, func
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.connection import get_db
-from src.database.models import Expense, EXPENSE_CATEGORIES
+from src.database.models import EXPENSE_CATEGORIES, Expense
 from src.routers.refuels import verify_api_key
 
 router = APIRouter(tags=["expenses"])
@@ -36,6 +37,7 @@ class ExpenseCreate(BaseModel):
 
 class ExpenseBulkCreate(BaseModel):
     """Массовое добавление позиций (из OCR чека)."""
+
     items: list[ExpenseCreate]
     car_id: str | None = None
 
@@ -71,9 +73,9 @@ async def list_expenses(
     if car_id:
         query = query.where(Expense.car_id == car_id)
     if filter == "parts":
-        query = query.where(Expense.is_part == True)
+        query = query.where(Expense.is_part)
     elif filter == "labor":
-        query = query.where(Expense.is_part == False, Expense.category == "repair")
+        query = query.where(not Expense.is_part, Expense.category == "repair")
     result = await db.execute(query)
     return result.scalars().all()
 
@@ -85,16 +87,21 @@ async def create_expense(
     _: str = Depends(verify_api_key),
 ):
     expense = Expense(
-        car_id=data.car_id, amount=data.amount, category=data.category,
-        description=data.description, is_part=data.is_part,
-        created_at=data.created_at or datetime.now(timezone.utc),
+        car_id=data.car_id,
+        amount=data.amount,
+        category=data.category,
+        description=data.description,
+        is_part=data.is_part,
+        created_at=data.created_at or datetime.now(UTC),
     )
     db.add(expense)
     await db.flush()
     return expense
 
 
-@router.post("/expenses/bulk", response_model=list[ExpenseResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/expenses/bulk", response_model=list[ExpenseResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_expenses_bulk(
     data: ExpenseBulkCreate,
     db: AsyncSession = Depends(get_db),
@@ -105,9 +112,11 @@ async def create_expenses_bulk(
     for item in data.items:
         expense = Expense(
             car_id=data.car_id or item.car_id,
-            amount=item.amount, category=item.category,
-            description=item.description, is_part=item.is_part,
-            created_at=item.created_at or datetime.now(timezone.utc),
+            amount=item.amount,
+            category=item.category,
+            description=item.description,
+            is_part=item.is_part,
+            created_at=item.created_at or datetime.now(UTC),
         )
         db.add(expense)
         await db.flush()
@@ -146,5 +155,6 @@ async def expense_stats(
     total_other = sum(float(r.total) for r in rows if r.category == "other")
     total = total_parts + total_labor + total_other
 
-    return ExpenseStats(total=total, total_parts=total_parts,
-                        total_labor=total_labor, total_other=total_other)
+    return ExpenseStats(
+        total=total, total_parts=total_parts, total_labor=total_labor, total_other=total_other
+    )

@@ -2,6 +2,7 @@
 Receipt OCR via OpenRouter API (vision).
 Rate limit: 10 запросов в час.
 """
+
 import base64
 import json
 import logging
@@ -57,13 +58,18 @@ async def analyze_receipt(
     payload = {
         "model": OCR_MODEL,
         "max_tokens": 300,
-        "messages": [{
-            "role": "user",
-            "content": [
-                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
-                {"type": "text", "text": OCR_PROMPT},
-            ],
-        }],
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{media_type};base64,{image_b64}"},
+                    },
+                    {"type": "text", "text": OCR_PROMPT},
+                ],
+            }
+        ],
     }
 
     try:
@@ -71,8 +77,10 @@ async def analyze_receipt(
             resp = await client.post(
                 OPENROUTER_URL,
                 json=payload,
-                headers={"Authorization": f"Bearer {settings.anthropic_api_key}",
-                         "Content-Type": "application/json"},
+                headers={
+                    "Authorization": f"Bearer {settings.anthropic_api_key}",
+                    "Content-Type": "application/json",
+                },
             )
             resp.raise_for_status()
 
@@ -126,21 +134,32 @@ async def analyze_odometer(
     payload = {
         "model": settings.ocr_model,
         "max_tokens": 100,
-        "messages": [{
-            "role": "user",
-            "content": [
-                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
-                {"type": "text", "text": 'На фото показание одометра автомобиля. Верни ТОЛЬКО число — целое количество километров без пробелов, запятых и единиц измерения. Только цифры. Например: 278456'},
-            ],
-        }],
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{media_type};base64,{image_b64}"},
+                    },
+                    {
+                        "type": "text",
+                        "text": "На фото показание одометра автомобиля. Верни ТОЛЬКО число — целое количество километров без пробелов, запятых и единиц измерения. Только цифры. Например: 278456",
+                    },
+                ],
+            }
+        ],
     }
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
-                OPENROUTER_URL, json=payload,
-                headers={"Authorization": f"Bearer {settings.anthropic_api_key}",
-                         "Content-Type": "application/json"},
+                OPENROUTER_URL,
+                json=payload,
+                headers={
+                    "Authorization": f"Bearer {settings.anthropic_api_key}",
+                    "Content-Type": "application/json",
+                },
             )
             resp.raise_for_status()
 
@@ -195,21 +214,29 @@ is_part=false — если это работа, услуга, замена, ди
     payload = {
         "model": settings.ocr_model,
         "max_tokens": 1000,
-        "messages": [{
-            "role": "user",
-            "content": [
-                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
-                {"type": "text", "text": prompt},
-            ],
-        }],
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{media_type};base64,{image_b64}"},
+                    },
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ],
     }
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
-                OPENROUTER_URL, json=payload,
-                headers={"Authorization": f"Bearer {settings.anthropic_api_key}",
-                         "Content-Type": "application/json"},
+                OPENROUTER_URL,
+                json=payload,
+                headers={
+                    "Authorization": f"Bearer {settings.anthropic_api_key}",
+                    "Content-Type": "application/json",
+                },
             )
             resp.raise_for_status()
 
@@ -224,11 +251,13 @@ is_part=false — если это работа, услуга, замена, ди
         items = []
         for row in arr:
             try:
-                items.append(RepairItem(
-                    description=str(row.get("description", "")),
-                    amount=float(row.get("amount", 0)),
-                    is_part=bool(row.get("is_part", False)),
-                ))
+                items.append(
+                    RepairItem(
+                        description=str(row.get("description", "")),
+                        amount=float(row.get("amount", 0)),
+                        is_part=bool(row.get("is_part", False)),
+                    )
+                )
             except Exception:
                 continue
 

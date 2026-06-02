@@ -5,7 +5,8 @@ Fuel consumption calculation logic.
 Зеркалируется на фронтенде в ``frontend/lib/calculations.ts``.
 При изменении формул — обновлять оба файла.
 """
-from decimal import Decimal, ROUND_HALF_UP
+
+from decimal import ROUND_HALF_UP, Decimal
 
 
 def calculate_liters(total_cost: float, fuel_price: float) -> float:

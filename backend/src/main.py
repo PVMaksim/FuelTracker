@@ -1,4 +1,5 @@
 """FuelTracker — Backend API entry point."""
+
 import logging
 import subprocess
 from contextlib import asynccontextmanager
@@ -55,19 +56,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(cars.router,    prefix="/api/v1")
+app.include_router(cars.router, prefix="/api/v1")
 app.include_router(expenses.router, prefix="/api/v1")
 app.include_router(refuels.router, prefix="/api/v1")
-app.include_router(stats.router,   prefix="/api/v1")
-app.include_router(export.router,  prefix="/api/v1")
-app.include_router(ocr.router,     prefix="/api/v1")
+app.include_router(stats.router, prefix="/api/v1")
+app.include_router(export.router, prefix="/api/v1")
+app.include_router(ocr.router, prefix="/api/v1")
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    await notify_telegram(
-        f"💥 Необработанная ошибка\nURL: {request.url}\n{str(exc)[:400]}"
-    )
+    await notify_telegram(f"💥 Необработанная ошибка\nURL: {request.url}\n{str(exc)[:400]}")
     return JSONResponse(status_code=500, content={"detail": "Внутренняя ошибка сервера"})
 
 

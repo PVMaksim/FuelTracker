@@ -4,6 +4,7 @@ Application configuration.
 Все настройки загружаются исключительно из переменных окружения через Pydantic Settings.
 Шаблон: ``.env.example``.
 """
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -48,7 +49,7 @@ class Settings(BaseSettings):
 
     # Приложение
     debug: bool = False
-    run_migrations: bool = True      # False в тестах — там create_tables()
+    run_migrations: bool = True  # False в тестах — там create_tables()
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:9090"]
 
     # Напоминание о ТО

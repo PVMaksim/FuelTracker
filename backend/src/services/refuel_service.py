@@ -2,18 +2,21 @@
 Business logic for creating refuel records.
 Вынесено из роутера для переиспользования в bulk_sync и тестах.
 """
-import logging
-from datetime import datetime, timezone
 
-from sqlalchemy import select, desc
-from sqlalchemy.ext.asyncio import AsyncSession
+import logging
+from datetime import UTC, datetime
+
 from sqlalchemy import func as sql_func
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
-from src.database.models import Refuel, Car
+from src.database.models import Car, Refuel
 from src.services.calculations import (
-    calculate_consumption, calculate_cost_per_km,
-    calculate_distance, calculate_liters,
+    calculate_consumption,
+    calculate_cost_per_km,
+    calculate_distance,
+    calculate_liters,
 )
 from src.services.notifications import notify_telegram
 
@@ -80,8 +83,8 @@ async def create_refuel_record(
     if odometer <= min_odometer:
         raise OdometerTooLowError(min_odometer)
 
-    liters      = calculate_liters(total_cost, fuel_price)
-    distance    = calculate_distance(odometer, last_odometer)
+    liters = calculate_liters(total_cost, fuel_price)
+    distance = calculate_distance(odometer, last_odometer)
     consumption = calculate_consumption(liters, distance)
     cost_per_km = calculate_cost_per_km(total_cost, distance)
 
@@ -98,18 +101,18 @@ async def create_refuel_record(
             car.last_fuel_type = fuel_type
 
     refuel = Refuel(
-        car_id      = car_id,
-        odometer    = odometer,
-        fuel_price  = fuel_price,
-        total_cost  = total_cost,
-        fuel_type   = fuel_type,
-        liters      = liters,
-        distance    = distance,
-        consumption = consumption,
-        cost_per_km = cost_per_km,
-        local_id    = local_id,
-        notes       = notes,
-        created_at  = created_at or datetime.now(timezone.utc),
+        car_id=car_id,
+        odometer=odometer,
+        fuel_price=fuel_price,
+        total_cost=total_cost,
+        fuel_type=fuel_type,
+        liters=liters,
+        distance=distance,
+        consumption=consumption,
+        cost_per_km=cost_per_km,
+        local_id=local_id,
+        notes=notes,
+        created_at=created_at or datetime.now(UTC),
     )
     db.add(refuel)
     await db.flush()

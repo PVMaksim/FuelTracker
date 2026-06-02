@@ -2,23 +2,24 @@
 Statistics endpoints.
 Эндпоинты для получения статистики и данных для графиков.
 """
-from datetime import datetime, timezone, timedelta
+
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from sqlalchemy import select, func, desc, extract
+from sqlalchemy import desc, extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
 from src.database.connection import get_db
-from src.database.models import Refuel, Car
+from src.database.models import Car, Refuel
 from src.routers.refuels import verify_api_key
 
 router = APIRouter(tags=["stats"])
 
 
 class MonthlyData(BaseModel):
-    month: str                    # "2026-04"
+    month: str  # "2026-04"
     total_cost: float
     total_liters: float
     avg_consumption: float | None
@@ -59,7 +60,7 @@ async def get_stats(
     count, total_cost, total_liters, avg_consumption = totals.one()
 
     # Средний расход за 30 дней
-    since = datetime.now(timezone.utc) - timedelta(days=30)
+    since = datetime.now(UTC) - timedelta(days=30)
     avg_30d = await db.execute(
         select(func.avg(Refuel.consumption))
         .where(Refuel.created_at >= since)
@@ -95,7 +96,7 @@ async def get_stats(
     # Статистика по месяцам (PostgreSQL: extract year/month)
     monthly_rows = await db.execute(
         select(
-            extract("year",  Refuel.created_at).label("year"),
+            extract("year", Refuel.created_at).label("year"),
             extract("month", Refuel.created_at).label("month"),
             func.sum(Refuel.total_cost).label("total_cost"),
             func.sum(Refuel.liters).label("total_liters"),
@@ -120,9 +121,14 @@ async def get_stats(
         total_liters=float(total_liters or 0),
         avg_consumption=round(float(avg_consumption), 2) if avg_consumption else None,
         avg_consumption_30d=round(float(avg_consumption_30d), 2) if avg_consumption_30d else None,
-        last_odometer=last.odometer if last else (
-            (await db.execute(select(Car.initial_odometer).where(Car.id == car_id))).scalar_one_or_none()
-            if car_id else settings.initial_odometer
+        last_odometer=last.odometer
+        if last
+        else (
+            (
+                await db.execute(select(Car.initial_odometer).where(Car.id == car_id))
+            ).scalar_one_or_none()
+            if car_id
+            else settings.initial_odometer
         ),
         last_fuel_price=float(last.fuel_price) if last else None,
         chart_data=chart_data,

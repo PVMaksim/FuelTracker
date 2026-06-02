@@ -1,26 +1,38 @@
 """Export endpoints: CSV and Excel."""
+
 import csv
 import io
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select, asc
+from sqlalchemy import asc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config import settings
 from src.database.connection import get_db
 from src.database.models import Refuel
-from src.config import settings
 
 router = APIRouter(tags=["export"])
 
-COLUMNS = ["Дата", "Пробег (км)", "Пробег за интервал (км)", "Цена за литр (₽)",
-           "Сумма (₽)", "Литры", "Расход (л/100км)", "₽/км", "Тип топлива", "Заметки"]
+COLUMNS = [
+    "Дата",
+    "Пробег (км)",
+    "Пробег за интервал (км)",
+    "Цена за литр (₽)",
+    "Сумма (₽)",
+    "Литры",
+    "Расход (л/100км)",
+    "₽/км",
+    "Тип топлива",
+    "Заметки",
+]
 
 
 async def verify_key(api_key: str = Query(alias="api_key")):
     """Проверка ключа через query-параметр (для скачивания файлов)."""
     from fastapi import HTTPException
+
     if api_key != settings.api_key:
         raise HTTPException(status_code=403, detail="Invalid API key")
     return api_key
@@ -42,15 +54,20 @@ async def export_csv(
     writer = csv.writer(output)
     writer.writerow(COLUMNS)
     for r in refuels:
-        writer.writerow([
-            r.created_at.strftime("%d.%m.%Y %H:%M"),
-            r.odometer, r.distance or "",
-            f"{float(r.fuel_price):.2f}", f"{float(r.total_cost):.2f}",
-            f"{float(r.liters):.2f}",
-            f"{float(r.consumption):.2f}" if r.consumption else "",
-            f"{float(r.cost_per_km):.2f}" if r.cost_per_km else "",
-            r.fuel_type or "", r.notes or "",
-        ])
+        writer.writerow(
+            [
+                r.created_at.strftime("%d.%m.%Y %H:%M"),
+                r.odometer,
+                r.distance or "",
+                f"{float(r.fuel_price):.2f}",
+                f"{float(r.total_cost):.2f}",
+                f"{float(r.liters):.2f}",
+                f"{float(r.consumption):.2f}" if r.consumption else "",
+                f"{float(r.cost_per_km):.2f}" if r.cost_per_km else "",
+                r.fuel_type or "",
+                r.notes or "",
+            ]
+        )
     output.seek(0)
     filename = f"fueltracker_{datetime.now().strftime('%Y%m%d')}.csv"
     return StreamingResponse(
@@ -67,7 +84,7 @@ async def export_xlsx(
     car_id: str | None = None,
 ):
     import openpyxl
-    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.styles import Alignment, Font, PatternFill
 
     query = select(Refuel).order_by(asc(Refuel.created_at))
     if car_id:
@@ -86,15 +103,20 @@ async def export_xlsx(
         cell.alignment = Alignment(horizontal="center")
 
     for r in refuels:
-        ws.append([
-            r.created_at.strftime("%d.%m.%Y %H:%M"),
-            r.odometer, r.distance or "",
-            float(r.fuel_price), float(r.total_cost),
-            float(r.liters),
-            float(r.consumption) if r.consumption else "",
-            float(r.cost_per_km) if r.cost_per_km else "",
-            r.fuel_type or "", r.notes or "",
-        ])
+        ws.append(
+            [
+                r.created_at.strftime("%d.%m.%Y %H:%M"),
+                r.odometer,
+                r.distance or "",
+                float(r.fuel_price),
+                float(r.total_cost),
+                float(r.liters),
+                float(r.consumption) if r.consumption else "",
+                float(r.cost_per_km) if r.cost_per_km else "",
+                r.fuel_type or "",
+                r.notes or "",
+            ]
+        )
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 18
 

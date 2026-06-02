@@ -5,6 +5,7 @@ Database connection and session management.
 Миграции схемы управляются Alembic (``alembic upgrade head``).
 Не использовать ``create_tables()`` на production — только в тестах.
 """
+
 from collections.abc import AsyncGenerator
 
 from sqlalchemy import text
@@ -29,6 +30,7 @@ AsyncSessionLocal = async_sessionmaker(
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
+
     pass
 
 

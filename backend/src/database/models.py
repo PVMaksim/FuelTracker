@@ -4,6 +4,7 @@ SQLAlchemy ORM models for FuelTracker.
 Содержит единственную модель ``Refuel`` — запись о заправке автомобиля.
 Схема версионируется через Alembic (``src/database/migrations/``).
 """
+
 import uuid
 from datetime import datetime
 
@@ -37,9 +38,7 @@ class Refuel(Base):
 
     __tablename__ = "refuels"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
@@ -51,9 +50,7 @@ class Refuel(Base):
     consumption: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
     cost_per_km: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
     fuel_type: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    local_id: Mapped[str | None] = mapped_column(
-        String(36), nullable=True, unique=True, index=True
-    )
+    local_id: Mapped[str | None] = mapped_column(String(36), nullable=True, unique=True, index=True)
     car_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     is_synced: Mapped[bool] = mapped_column(Boolean, default=True)
     receipt_ocr_raw: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -74,27 +71,22 @@ class Car(Base):
 
     __tablename__ = "cars"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     initial_odometer: Mapped[int] = mapped_column(Integer, default=0)
     last_fuel_type: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 EXPENSE_CATEGORIES = ("repair", "other")
+
 
 class Expense(Base):
     """ORM model for car expenses (non-fuel)."""
 
     __tablename__ = "expenses"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     car_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True

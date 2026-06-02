@@ -2,24 +2,29 @@
 Refuels CRUD endpoints.
 Логика вынесена в ``src.services.refuel_service``.
 """
+
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel, field_validator
-from sqlalchemy import select, desc
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config import settings
 from src.database.connection import get_db
-from src.database.models import Refuel, FUEL_TYPES
+from src.database.models import FUEL_TYPES, Refuel
 from src.services.calculations import (
-    calculate_liters, calculate_consumption,
-    calculate_distance, calculate_cost_per_km,
+    calculate_consumption,
+    calculate_cost_per_km,
+    calculate_distance,
+    calculate_liters,
 )
 from src.services.refuel_service import (
-    create_refuel_record, get_last_odometer, OdometerTooLowError,
+    OdometerTooLowError,
+    create_refuel_record,
+    get_last_odometer,
 )
-from src.config import settings
 
 router = APIRouter(tags=["refuels"])
 api_key_header = APIKeyHeader(name="X-API-Key")
@@ -33,6 +38,7 @@ async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
 
 
 # ── Схемы ──────────────────────────────────────────────────────────────────
+
 
 class RefuelCreate(BaseModel):
     odometer: int
@@ -94,6 +100,7 @@ class RefuelResponse(BaseModel):
 
 # ── Эндпоинты ─────────────────────────────────────────────────────────────
 
+
 @router.get("/refuels", response_model=list[RefuelResponse])
 async def list_refuels(
     db: AsyncSession = Depends(get_db),
@@ -118,10 +125,14 @@ async def create_refuel(
     try:
         return await create_refuel_record(
             db,
-            odometer=data.odometer, fuel_price=data.fuel_price,
-            total_cost=data.total_cost, car_id=data.car_id,
+            odometer=data.odometer,
+            fuel_price=data.fuel_price,
+            total_cost=data.total_cost,
+            car_id=data.car_id,
             fuel_type=data.fuel_type,
-            local_id=data.local_id, notes=data.notes, created_at=data.created_at,
+            local_id=data.local_id,
+            notes=data.notes,
+            created_at=data.created_at,
         )
     except OdometerTooLowError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -140,17 +151,22 @@ async def update_refuel(
     if not refuel:
         raise HTTPException(status_code=404, detail="Запись не найдена")
 
-    if data.odometer   is not None: refuel.odometer   = data.odometer
-    if data.fuel_price is not None: refuel.fuel_price = data.fuel_price
-    if data.total_cost is not None: refuel.total_cost = data.total_cost
-    if data.fuel_type  is not None: refuel.fuel_type  = data.fuel_type
-    if data.notes      is not None: refuel.notes      = data.notes
+    if data.odometer is not None:
+        refuel.odometer = data.odometer
+    if data.fuel_price is not None:
+        refuel.fuel_price = data.fuel_price
+    if data.total_cost is not None:
+        refuel.total_cost = data.total_cost
+    if data.fuel_type is not None:
+        refuel.fuel_type = data.fuel_type
+    if data.notes is not None:
+        refuel.notes = data.notes
 
     prev = await get_last_odometer(db, exclude_id=refuel_id)
-    liters          = calculate_liters(float(refuel.total_cost), float(refuel.fuel_price))
-    distance        = calculate_distance(refuel.odometer, prev)
-    refuel.liters      = liters
-    refuel.distance    = distance
+    liters = calculate_liters(float(refuel.total_cost), float(refuel.fuel_price))
+    distance = calculate_distance(refuel.odometer, prev)
+    refuel.liters = liters
+    refuel.distance = distance
     refuel.consumption = calculate_consumption(liters, distance)
     refuel.cost_per_km = calculate_cost_per_km(float(refuel.total_cost), distance)
 
@@ -168,18 +184,20 @@ async def bulk_sync(
     results = []
     for item in items:
         if item.local_id:
-            exists = await db.execute(
-                select(Refuel.id).where(Refuel.local_id == item.local_id)
-            )
+            exists = await db.execute(select(Refuel.id).where(Refuel.local_id == item.local_id))
             if exists.scalar_one_or_none():
                 results.append({"local_id": item.local_id, "status": "skipped"})
                 continue
         try:
             refuel = await create_refuel_record(
                 db,
-                odometer=item.odometer, fuel_price=item.fuel_price,
-                total_cost=item.total_cost, fuel_type=item.fuel_type,
-                local_id=item.local_id, notes=item.notes, created_at=item.created_at,
+                odometer=item.odometer,
+                fuel_price=item.fuel_price,
+                total_cost=item.total_cost,
+                fuel_type=item.fuel_type,
+                local_id=item.local_id,
+                notes=item.notes,
+                created_at=item.created_at,
             )
             results.append({"local_id": item.local_id, "server_id": refuel.id, "status": "created"})
         except OdometerTooLowError as e:

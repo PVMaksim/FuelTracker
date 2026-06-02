@@ -2,16 +2,18 @@
 Alembic migration environment — async PostgreSQL setup.
 Среда выполнения миграций Alembic с asyncpg.
 """
+
 import asyncio
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from src.config import settings
+from src.database import models  # noqa: F401 — side-effect import регистрирует модели
+
 # Импортируем Base и все модели чтобы Alembic видел метаданные
 from src.database.connection import Base
-from src.database import models  # noqa: F401 — side-effect import регистрирует модели
-from src.config import settings
 
 config = context.config
 if config.config_file_name is not None:

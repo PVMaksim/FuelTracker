@@ -2,6 +2,7 @@
 Cars CRUD endpoints.
 Управление автомобилями — создание, список, обновление, удаление.
 """
+
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,7 +10,6 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config import settings
 from src.database.connection import get_db
 from src.database.models import Car
 from src.routers.refuels import verify_api_key

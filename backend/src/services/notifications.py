@@ -4,6 +4,7 @@ Telegram notifications for production errors.
 Модуль отправки уведомлений разработчику в Telegram при сбоях production-сервиса.
 Вызывается из глобального обработчика исключений FastAPI в ``src.main``.
 """
+
 import logging
 
 import httpx
