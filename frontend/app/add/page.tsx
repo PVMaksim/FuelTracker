@@ -98,7 +98,10 @@ export default function AddRefuelPage() {
         api.updateCar(car.id, { last_fuel_type: form.fuelType }).catch(() => {});
       }
       setSaved(true);
-      setTimeout(() => router.push("/"), 1500);
+      setTimeout(() => {
+        router.refresh();
+        router.push("/");
+      }, 1500);
     } catch (e: any) {
       setErrors({ odometer: e.message });
     } finally { setSaving(false); }
