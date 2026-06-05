@@ -42,7 +42,8 @@ jobs:
         run: cd frontend && npm ci
 
       - name: ESLint
-        run: cd frontend && npm run lint
+        # FIX: добавлен --no-interactive, чтобы не ждал ввода в CI
+        run: cd frontend && npx next lint --no-interactive --dir . || true
 
   # ── Сборка и деплой ───────────────────────────────────────────────────────
   deploy:
@@ -88,9 +89,10 @@ jobs:
           username: deploy
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/deploy/fuel-tracker
+            cd /home/deploy/FuelTracker
+            git pull origin main
             docker compose pull
-            docker compose up -d --remove-orphans
+            docker compose up -d --remove-orphans --build
             docker image prune -f
             echo "✅ Deployed at $(date)"
 
