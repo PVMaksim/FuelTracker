@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
 from src.database.models import Car, Refuel
+from src.services.audit import log_action  # ← ИСПРАВЛЕНО: было backend.src.services.audit
 from src.services.calculations import (
     calculate_consumption,
     calculate_cost_per_km,
@@ -115,5 +116,16 @@ async def create_refuel_record(
         created_at=created_at or datetime.now(UTC),
     )
     db.add(refuel)
-    await db.flush()
+    await db.flush()  # Сначала flush — получаем ID из БД
+    
+    # Audit log — после flush, когда ID уже есть
+    log_action("create_refuel", {
+        "id": refuel.id,
+        "created_at": refuel.created_at.isoformat() if refuel.created_at else None,
+        "liters": refuel.liters,
+        "odometer": refuel.odometer,
+        "total_cost": refuel.total_cost,
+        "fuel_type": refuel.fuel_type,
+        "car_id": refuel.car_id,
+    })
     return refuel
