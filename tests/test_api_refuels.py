@@ -11,8 +11,9 @@ from datetime import datetime, timezone, timedelta
 async def test_create_refuel_success(client):
     """Первая заправка создаётся, расчёты корректны."""
     resp = await client.post("/api/v1/refuels", json={
-        "odometer": 79_000, "fuel_price": 58.5, "total_cost": 2_340.0,
+        "odometer": 231_000, "fuel_price": 58.5, "total_cost": 2_340.0,
     })
+    print("VALIDATION ERROR:", resp.json())
     assert resp.status_code == 201
     data = resp.json()
     assert data["liters"] == 40.0
@@ -24,10 +25,10 @@ async def test_create_refuel_success(client):
 async def test_create_second_refuel_calculates_consumption(client):
     """Вторая заправка считает расход — литры всегда корректны."""
     await client.post("/api/v1/refuels", json={
-        "odometer": 78_700, "fuel_price": 58.5, "total_cost": 2_340.0,
+        "odometer": 231_000, "fuel_price": 58.5, "total_cost": 2_340.0,
     })
     resp = await client.post("/api/v1/refuels", json={
-        "odometer": 79_240, "fuel_price": 58.5, "total_cost": 2_340.0,
+        "odometer": 231_540, "fuel_price": 58.5, "total_cost": 2_340.0,
     })
     assert resp.status_code == 201
     data = resp.json()
@@ -43,7 +44,7 @@ async def test_create_second_refuel_calculates_consumption(client):
 @pytest.mark.asyncio
 async def test_create_refuel_with_fuel_type(client):
     resp = await client.post("/api/v1/refuels", json={
-        "odometer": 79_000, "fuel_price": 61.0,
+        "odometer": 231_000, "fuel_price": 61.0,
         "total_cost": 1_830.0, "fuel_type": "95",
     })
     assert resp.status_code == 201
@@ -55,11 +56,11 @@ async def test_create_refuel_odometer_too_low(client):
     """Пробег <= предыдущего — 422."""
     t1 = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
     await client.post("/api/v1/refuels", json={
-        "odometer": 79_000, "fuel_price": 58.5, "total_cost": 2_340.0,
+        "odometer": 231_000, "fuel_price": 58.5, "total_cost": 2_340.0,
         "created_at": t1,
     })
     resp = await client.post("/api/v1/refuels", json={
-        "odometer": 79_000, "fuel_price": 58.5, "total_cost": 2_340.0,
+        "odometer": 231_000, "fuel_price": 58.5, "total_cost": 2_340.0,
     })
     assert resp.status_code == 422
     assert "больше" in resp.json()["detail"]
@@ -68,7 +69,7 @@ async def test_create_refuel_odometer_too_low(client):
 @pytest.mark.asyncio
 async def test_create_refuel_zero_price(client):
     resp = await client.post("/api/v1/refuels", json={
-        "odometer": 79_000, "fuel_price": 0, "total_cost": 2_340.0,
+        "odometer": 231_000, "fuel_price": 0, "total_cost": 2_340.0,
     })
     assert resp.status_code == 422
 
@@ -76,7 +77,7 @@ async def test_create_refuel_zero_price(client):
 @pytest.mark.asyncio
 async def test_create_refuel_invalid_fuel_type(client):
     resp = await client.post("/api/v1/refuels", json={
-        "odometer": 79_000, "fuel_price": 58.5,
+        "odometer": 231_000, "fuel_price": 58.5,
         "total_cost": 2_340.0, "fuel_type": "kerosene",
     })
     assert resp.status_code == 422
@@ -86,7 +87,7 @@ async def test_create_refuel_invalid_fuel_type(client):
 async def test_create_refuel_unauthorized(client):
     resp = await client.post(
         "/api/v1/refuels",
-        json={"odometer": 79_000, "fuel_price": 58.5, "total_cost": 2_340.0},
+        json={"odometer": 231_000, "fuel_price": 58.5, "total_cost": 2_340.0},
         headers={"X-API-Key": "wrong-key"},
     )
     assert resp.status_code == 403
@@ -105,21 +106,21 @@ async def test_list_refuels_empty(client):
 async def test_list_refuels_order(client):
     """Заправки возвращаются в порядке новые первые."""
     base = datetime.now(timezone.utc) - timedelta(days=10)
-    for i, odo in enumerate([79_000, 79_500, 80_000]):
+    for i, odo in enumerate([231_000, 231_000, 232_000]):
         await client.post("/api/v1/refuels", json={
             "odometer": odo, "fuel_price": 58.5, "total_cost": 2_340.0,
             "created_at": (base + timedelta(days=i)).isoformat(),
         })
     resp = await client.get("/api/v1/refuels")
     data = resp.json()
-    assert data[0]["odometer"] == 80_000
-    assert data[-1]["odometer"] == 79_000
+    assert data[0]["odometer"] == 232_000
+    assert data[-1]["odometer"] == 231_000
 
 
 @pytest.mark.asyncio
 async def test_list_refuels_pagination(client):
     base = datetime.now(timezone.utc) - timedelta(days=5)
-    for i, odo in enumerate([79_000, 79_500, 80_000]):
+    for i, odo in enumerate([231_000, 231_000, 232_000]):
         await client.post("/api/v1/refuels", json={
             "odometer": odo, "fuel_price": 58.5, "total_cost": 2_340.0,
             "created_at": (base + timedelta(days=i)).isoformat(),
@@ -133,7 +134,7 @@ async def test_list_refuels_pagination(client):
 @pytest.mark.asyncio
 async def test_update_refuel_recalculates(client):
     create = await client.post("/api/v1/refuels", json={
-        "odometer": 79_000, "fuel_price": 58.5, "total_cost": 2_340.0,
+        "odometer": 231_000, "fuel_price": 58.5, "total_cost": 2_340.0,
     })
     refuel_id = create.json()["id"]
     resp = await client.put(f"/api/v1/refuels/{refuel_id}", json={"total_cost": 4_680.0})
@@ -152,7 +153,7 @@ async def test_update_refuel_not_found(client):
 @pytest.mark.asyncio
 async def test_delete_refuel(client):
     create = await client.post("/api/v1/refuels", json={
-        "odometer": 79_000, "fuel_price": 58.5, "total_cost": 2_340.0,
+        "odometer": 231_000, "fuel_price": 58.5, "total_cost": 2_340.0,
     })
     del_resp = await client.delete(f"/api/v1/refuels/{create.json()['id']}")
     assert del_resp.status_code == 204
@@ -170,9 +171,9 @@ async def test_delete_nonexistent(client):
 @pytest.mark.asyncio
 async def test_bulk_sync_creates_records(client):
     resp = await client.post("/api/v1/refuels/bulk", json=[
-        {"odometer": 79_000, "fuel_price": 58.5, "total_cost": 2_340.0, "local_id": "l1",
+        {"odometer": 231_000, "fuel_price": 58.5, "total_cost": 2_340.0, "local_id": "l1",
          "created_at": (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()},
-        {"odometer": 79_500, "fuel_price": 59.0, "total_cost": 2_360.0, "local_id": "l2",
+        {"odometer": 231_500, "fuel_price": 59.0, "total_cost": 2_360.0, "local_id": "l2",
          "created_at": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()},
     ])
     assert resp.status_code == 200
@@ -184,7 +185,7 @@ async def test_bulk_sync_creates_records(client):
 @pytest.mark.asyncio
 async def test_bulk_sync_deduplication(client):
     """Повторная отправка с тем же local_id не создаёт дублей."""
-    payload = [{"odometer": 79_000, "fuel_price": 58.5,
+    payload = [{"odometer": 231_000, "fuel_price": 58.5,
                 "total_cost": 2_340.0, "local_id": "local-dup"}]
     await client.post("/api/v1/refuels/bulk", json=payload)
     resp = await client.post("/api/v1/refuels/bulk", json=payload)
