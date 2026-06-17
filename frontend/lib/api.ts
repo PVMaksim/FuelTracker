@@ -60,7 +60,7 @@ export interface StatsResponse {
 export interface OCRResult {
   total_cost: number | null;
   liters: number | null;
-  price_per_liter: number | null;
+  fuel_price: number | null;
   station: string | null;
 }
 
