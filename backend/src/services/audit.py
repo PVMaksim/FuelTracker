@@ -3,7 +3,7 @@ Audit log — журнал всех операций с заправками.
 """
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,7 @@ def log_action(action: str, data: dict[str, Any]) -> None:
         AUDIT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with AUDIT_LOG_PATH.open("a", encoding="utf-8") as f:
             f.write(json.dumps({
-                "ts": datetime.now(timezone.utc).isoformat(),
+                "ts": datetime.now(UTC).isoformat(),
                 "action": action,
                 "data": data,
             }, ensure_ascii=False) + "\n")

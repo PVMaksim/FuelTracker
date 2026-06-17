@@ -117,7 +117,7 @@ async def create_refuel_record(
     )
     db.add(refuel)
     await db.flush()  # Сначала flush — получаем ID из БД
-    
+
     # Audit log — после flush, когда ID уже есть
     log_action("create_refuel", {
         "id": refuel.id,
