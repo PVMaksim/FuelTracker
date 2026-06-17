@@ -113,13 +113,13 @@ export default function AddRefuelPage() {
     setOcrLoading(true);
     try {
       const result = await api.analyzeReceipt(file);
-      if (!result.total_cost && !result.liters && !result.price_per_liter) {
+      if (!result.total_cost && !result.liters && !result.fuel_price) {
         alert("OCR не смог распознать чек. Введите данные вручную.");
       } else {
         setForm(f => ({
           ...f,
           totalCost: result.total_cost ? String(result.total_cost) : f.totalCost,
-          fuelPrice: result.price_per_liter ? String(result.price_per_liter) : f.fuelPrice,
+          fuelPrice: result.fuel_price ? String(result.fuel_price) : f.fuelPrice,
         }));
       }
     } catch (e: any) {
