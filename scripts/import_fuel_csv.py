@@ -14,7 +14,7 @@ from pathlib import Path
 
 # Настройки API
 API_URL = "https://neoxis.store:9443/api"
-API_KEY = "ce68e744414acc7a5c6a1cbe0c70c522322e45"
+API_KEY = "ce68e744414ac7952d8a44fae6ec03f4d70a616c7a5c6a1cbe0c70c522322e45"
 
 def parse_date(raw: str) -> str | None:
     """Парсит разные форматы дат → ISO 8601."""
